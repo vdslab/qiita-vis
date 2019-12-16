@@ -9,11 +9,15 @@ const history = createBrowserHistory()
 
 const App = () => {
   return (
-    <Router history={history}>
-      <Switch>
-        <Route path='/' component={RootPage} exact />
-      </Switch>
-    </Router>
+    <section className='section'>
+      <div className='container'>
+        <Router history={history}>
+          <Switch>
+            <Route path='/' component={RootPage} exact />
+          </Switch>
+        </Router>
+      </div>
+    </section>
   )
 }
 

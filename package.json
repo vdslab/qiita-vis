@@ -26,8 +26,13 @@
     "react-scripts": "^3.3.0"
   },
   "dependencies": {
+    "@nivo/bar": "^0.60.1",
+    "@nivo/network": "^0.60.0",
+    "bulma": "^0.8.0",
+    "egraph": "^4.0.1-alpha.14",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
+    "react-eg-renderer": "^1.5.0-alpha.4",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2"
   },
