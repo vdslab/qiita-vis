@@ -30,7 +30,13 @@ const App = () => {
         <div className='content has-text-centered'>
           <p>&copy; 2019 Yosuke Onoue</p>
           <p>
-            <a href='https://vdslab.jp/'>vdslab.jp</a>
+            <a
+              href='https://vdslab.jp/'
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              vdslab.jp
+            </a>
           </p>
         </div>
       </footer>

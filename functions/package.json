@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "start": "functions-framework --target=main"
+    "start": "functions-framework --target=main",
+    "deploy": "gcloud functions deploy qiita-vis-api --project=vdslab-207906 --entry-point=main --trigger-http --runtime=nodejs10 --region=asia-northeast1 --service-account=qiit-vis@vdslab-207906.iam.gserviceaccount.com"
   },
   "keywords": [],
   "author": "Yosuke Onoue <onoue@likr-lab.com>",

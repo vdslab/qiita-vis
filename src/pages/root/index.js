@@ -118,6 +118,13 @@ const TagChart = ({
                       ? highlightOpacity
                       : transparentOpacity
                   }
+                  onClick={() => {
+                    if (selectedTag === tag) {
+                      setSelectedTag(null)
+                    } else {
+                      setSelectedTag(tag)
+                    }
+                  }}
                   onMouseOver={() => {
                     setSelectedTag(tag)
                   }}
@@ -219,6 +226,13 @@ const NetworkChart = memo(
                       ? highlightOpacity
                       : transparentOpacity
                   }
+                  onClick={() => {
+                    if (selectedTag === node.name) {
+                      setSelectedTag(null)
+                    } else {
+                      setSelectedTag(node.name)
+                    }
+                  }}
                   onMouseOver={() => {
                     setSelectedTag(node.name)
                   }}
@@ -391,6 +405,13 @@ const MonthlyAreaChart = ({
                       ? highlightOpacity
                       : transparentOpacity
                   }
+                  onClick={() => {
+                    if (selectedTag === s.key) {
+                      setSelectedTag(null)
+                    } else {
+                      setSelectedTag(s.key)
+                    }
+                  }}
                   onMouseOver={() => {
                     setSelectedTag(s.key)
                   }}
@@ -547,6 +568,13 @@ const MonthlyLineChart = ({
                       ? highlightOpacity
                       : transparentOpacity
                   }
+                  onClick={() => {
+                    if (selectedTag === key) {
+                      setSelectedTag(null)
+                    } else {
+                      setSelectedTag(key)
+                    }
+                  }}
                   onMouseOver={() => {
                     setSelectedTag(key)
                   }}
