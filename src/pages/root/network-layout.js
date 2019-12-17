@@ -1,7 +1,6 @@
-const mod = window.egraph('https://unpkg.com/egraph/umd/egraph.wasm')
+import { Graph, SimulationBuilder } from 'egraph'
 
 export default async (data) => {
-  const { Graph, SimulationBuilder } = await mod
   const graph = new Graph()
   for (const node of data.nodes) {
     graph.addNode(node.id, node)

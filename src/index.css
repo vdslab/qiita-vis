@@ -1,0 +1,7 @@
+svg text {
+  user-select: none;
+}
+
+.pointer {
+  cursor: pointer;
+}

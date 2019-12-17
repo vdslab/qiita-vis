@@ -17,7 +17,8 @@ const requestQuery = (query, params) => {
 const app = express()
 app.use(cors({ origin: true }))
 
-app.get('/total', (req, res) => {
+app.get('/tags', (req, res) => {
+  const limit = +req.query.limit || 30
   const query = `SELECT
   t.name AS tag,
   COUNT(*) AS count
@@ -30,7 +31,38 @@ ORDER BY
   count DESC
 LIMIT @limit`
 
-  requestQuery(query, { limit: 30 })
+  requestQuery(query, { limit })
+    .then(([rows]) => {
+      return res.status(200).json(rows)
+    })
+    .catch((error) => {
+      return res.status(500).json(error)
+    })
+})
+
+app.get('/total', (req, res) => {
+  const limit = +req.query.limit || 30
+  const startDate = req.query.startDate
+    ? new Date(req.query.startDate)
+    : new Date(2000, 0, 1)
+  const endDate = req.query.endDate
+    ? new Date(req.query.endDate)
+    : new Date(2200, 0, 1)
+  const query = `SELECT
+  t.name AS tag,
+  COUNT(*) AS count
+FROM
+  \`vdslab-207906.qiita.items\` s,
+  s.tags AS t
+WHERE
+  created_at BETWEEN @startDate AND @endDate
+GROUP BY
+  tag
+ORDER BY
+  count DESC
+LIMIT @limit`
+
+  requestQuery(query, { limit, startDate, endDate })
     .then(([rows]) => {
       return res.status(200).json(rows)
     })
@@ -40,6 +72,13 @@ LIMIT @limit`
 })
 
 app.get('/graph', (req, res) => {
+  const startDate = req.query.startDate
+    ? new Date(req.query.startDate)
+    : new Date(2000, 0, 1)
+  const endDate = req.query.endDate
+    ? new Date(req.query.endDate)
+    : new Date(2200, 0, 1)
+  const limit = +req.query.limit || 100
   const query = `CREATE TEMPORARY FUNCTION
   pairs(tags ARRAY<STRUCT<versions ARRAY<String>,
     name String>>)
@@ -65,17 +104,18 @@ FROM
   \`vdslab-207906.qiita.items\` items,
   UNNEST(pairs(items.tags)) pair
 WHERE
-  tag1 IS NOT NULL
+  created_at BETWEEN @startDate AND @endDate
+  AND tag1 IS NOT NULL
   AND tag2 IS NOT NULL
 GROUP BY
   tag1,
   tag2
-HAVING
-  count >= 1000
 ORDER BY
-  count DESC`
+  count DESC
+LIMIT
+  @limit`
 
-  requestQuery(query, {})
+  requestQuery(query, { startDate, endDate, limit })
     .then(([rows]) => {
       const nodeIds = new Set()
       for (const { tag1, tag2 } of rows) {
@@ -108,6 +148,57 @@ ORDER BY
           count
         }))
       })
+    })
+    .catch((error) => {
+      return res.status(500).json(error)
+    })
+})
+
+app.get('/monthly', (req, res) => {
+  const tags = (req.query.tags || '').split(',')
+  const query = `SELECT
+  t.name AS tag,
+  datetime_TRUNC( DATETIME(created_at,
+      "+09:00"),
+    MONTH) AS yearMonth,
+  COUNT(*) AS count
+FROM
+  \`vdslab-207906.qiita.items\` s,
+  s.tags AS t
+WHERE
+  t.name IN UNNEST(@tags)
+GROUP BY
+  tag,
+  yearMonth
+ORDER BY
+  yearMonth,
+  tag`
+
+  const groupBy = (items) => {
+    const groupedItems = items.reduce((acc, obj) => {
+      const key = obj.yearMonth.value
+      if (!acc[key]) {
+        acc[key] = []
+      }
+      acc[key].push(obj)
+      return acc
+    }, {})
+    const result = Array.from(Object.entries(groupedItems)).map(
+      ([yearMonth, items]) => {
+        const obj = { yearMonth }
+        for (const { tag, count } of items) {
+          obj[tag] = count
+        }
+        return obj
+      }
+    )
+    result.sort((a, b) => (a.yearMonth < b.yearMonth ? -1 : 1))
+    return result
+  }
+
+  requestQuery(query, { tags })
+    .then(([rows]) => {
+      return res.status(200).json(groupBy(rows))
     })
     .catch((error) => {
       return res.status(500).json(error)
