@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { memo, useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import applyLayout from './network-layout'
 import { fetchGraph, fetchMonthly, fetchTags, fetchTotal } from './api'
@@ -67,7 +67,7 @@ const TagChart = ({
     >
       <g transform={`translate(${margin.left},${margin.top})`}>
         <g>
-          {xScale.ticks().map((x, i) => {
+          {xScale.ticks(5).map((x, i) => {
             return (
               <g key={i} transform={`translate(${xScale(x)},0)`}>
                 <line
@@ -94,7 +94,6 @@ const TagChart = ({
               <g
                 key={tag}
                 style={{
-                  transitionDelay: '2s',
                   transitionDuration: '1s',
                   transitionProperty: 'transform'
                 }}
@@ -104,7 +103,6 @@ const TagChart = ({
                 <rect
                   className='pointer'
                   style={{
-                    transitionDelay: '2s',
                     transitionDuration: '1s',
                     transitionProperty: 'width'
                   }}
@@ -144,112 +142,76 @@ const TagChart = ({
   )
 }
 
-const NetworkChart = ({
-  data,
-  tags,
-  baseOpacity,
-  transparentOpacity,
-  highlightOpacity,
-  selectedTag,
-  setSelectedTag
-}) => {
-  const margin = 50
-  const contentWidth = 600
-  const contentHeight = 600
-  const width = contentWidth + margin * 2
-  const height = contentHeight + margin * 2
+const NetworkChart = memo(
+  ({
+    data,
+    tags,
+    baseOpacity,
+    transparentOpacity,
+    highlightOpacity,
+    selectedTag,
+    setSelectedTag
+  }) => {
+    const margin = 50
+    const contentWidth = 600
+    const contentHeight = 600
+    const width = contentWidth + margin * 2
+    const height = contentHeight + margin * 2
 
-  const xScale = d3
-    .scaleLinear()
-    .domain(d3.extent(data.nodes, (node) => node.x))
-    .range([0, contentWidth])
-  const yScale = d3
-    .scaleLinear()
-    .domain(d3.extent(data.nodes, (node) => node.y))
-    .range([0, contentHeight])
-  const sizeScale = d3
-    .scaleSqrt()
-    .domain(d3.extent(data.nodes, (node) => node.count))
-    .range([5, 15])
-  const fontSizeScale = d3
-    .scaleSqrt()
-    .domain(d3.extent(data.nodes, (node) => node.count))
-    .range([6, 16])
-  const colors = new Map(tags.map(({ tag, color }) => [tag, color]))
+    const xScale = d3
+      .scaleLinear()
+      .domain(d3.extent(data.nodes, (node) => node.x))
+      .range([0, contentWidth])
+    const yScale = d3
+      .scaleLinear()
+      .domain(d3.extent(data.nodes, (node) => node.y))
+      .range([0, contentHeight])
+    const sizeScale = d3
+      .scaleSqrt()
+      .domain(d3.extent(data.nodes, (node) => node.count))
+      .range([10, 30])
+    const fontSizeScale = d3
+      .scaleSqrt()
+      .domain(d3.extent(data.nodes, (node) => node.count))
+      .range([6, 16])
+    const colors = new Map(tags.map(({ tag, color }) => [tag, color]))
 
-  const nodes = new Map(data.nodes.map((node) => [node.id, node]))
-  return (
-    <SvgFigure width={width} height={height}>
-      <g transform={`translate(${margin},${margin})`}>
-        <g>
-          {data.links.map((link) => {
-            return (
-              <g key={`${link.source}:${link.target}`}>
-                <line
-                  style={{
-                    transitionDelay: '2s',
-                    transitionDuration: '1s',
-                    transitionProperty: 'x1,y1,x2,y2'
-                  }}
-                  x1={xScale(nodes.get(link.source).x)}
-                  y1={yScale(nodes.get(link.source).y)}
-                  x2={xScale(nodes.get(link.target).x)}
-                  y2={yScale(nodes.get(link.target).y)}
-                  stroke='#ccc'
-                />
-              </g>
-            )
-          })}
-        </g>
-        <g>
-          {data.nodes.map((node) => {
-            return (
-              <g key={node.id}>
-                <circle
+    const nodes = new Map(data.nodes.map((node) => [node.id, node]))
+    return (
+      <SvgFigure width={width} height={height}>
+        <g transform={`translate(${margin},${margin})`}>
+          <g>
+            {data.links.map((link) => {
+              const sourceNode = nodes.get(link.source)
+              const targetNode = nodes.get(link.target)
+              return (
+                <g key={`${sourceNode.name}:${targetNode.name}`}>
+                  <line
+                    style={{
+                      transitionDuration: '1s',
+                      transitionProperty: 'x1,y1,x2,y2'
+                    }}
+                    x1={xScale(nodes.get(link.source).x)}
+                    y1={yScale(nodes.get(link.source).y)}
+                    x2={xScale(nodes.get(link.target).x)}
+                    y2={yScale(nodes.get(link.target).y)}
+                    stroke='#ccc'
+                  />
+                </g>
+              )
+            })}
+          </g>
+          <g>
+            {data.nodes.map((node) => {
+              return (
+                <g
+                  key={node.name}
                   className='pointer'
                   style={{
-                    transitionDelay: '2s',
                     transitionDuration: '1s',
-                    transitionProperty: 'cx,cy,r'
+                    transitionProperty: 'transform'
                   }}
-                  cx={xScale(node.x)}
-                  cy={yScale(node.y)}
-                  r={sizeScale(node.count)}
-                  fill={colors.get(node.name) || '#ccc'}
-                  opacity={
-                    selectedTag == null
-                      ? baseOpacity
-                      : node.name === selectedTag
-                      ? highlightOpacity
-                      : transparentOpacity
-                  }
-                  onMouseOver={() => {
-                    setSelectedTag(node.name)
-                  }}
-                  onMouseLeave={() => {
-                    setSelectedTag(null)
-                  }}
-                />
-              </g>
-            )
-          })}
-        </g>
-        <g>
-          {data.nodes.map((node) => {
-            return (
-              <g key={node.id}>
-                <text
-                  className='pointer'
-                  style={{
-                    transitionDelay: '2s',
-                    transitionDuration: '1s',
-                    transitionProperty: 'x,y'
-                  }}
-                  x={xScale(node.x)}
-                  y={yScale(node.y)}
-                  fontSize={fontSizeScale(node.count)}
-                  textAnchor='middle'
-                  dominantBaseline='central'
+                  transform={`translate(${xScale(node.x)},${yScale(node.y)})`}
                   opacity={
                     selectedTag == null
                       ? baseOpacity
@@ -264,16 +226,26 @@ const NetworkChart = ({
                     setSelectedTag(null)
                   }}
                 >
-                  {node.name}
-                </text>
-              </g>
-            )
-          })}
+                  <circle
+                    r={sizeScale(node.count)}
+                    fill={colors.get(node.name) || '#ccc'}
+                  />
+                  <text
+                    fontSize={fontSizeScale(node.count)}
+                    textAnchor='middle'
+                    dominantBaseline='central'
+                  >
+                    {node.name}
+                  </text>
+                </g>
+              )
+            })}
+          </g>
         </g>
-      </g>
-    </SvgFigure>
-  )
-}
+      </SvgFigure>
+    )
+  }
+)
 
 const MonthlyAreaChart = ({
   data: rawData,
@@ -302,8 +274,8 @@ const MonthlyAreaChart = ({
     .offset(d3.stackOffsetNone)
   const series = stack(data)
 
-  const margin = { top: 10, right: 50, bottom: 50, left: 50 }
-  const contentWidth = 1400
+  const margin = { top: 10, right: 60, bottom: 50, left: 60 }
+  const contentWidth = 1500 - margin.right - margin.left
   const contentHeight = 400 - margin.top - margin.bottom
   const tickLength = 10
 
@@ -407,7 +379,6 @@ const MonthlyAreaChart = ({
                 <path
                   className='pointer'
                   style={{
-                    transitionDelay: '2s',
                     transitionDuration: '1s',
                     transitionProperty: 'd'
                   }}
@@ -420,6 +391,12 @@ const MonthlyAreaChart = ({
                       ? highlightOpacity
                       : transparentOpacity
                   }
+                  onMouseOver={() => {
+                    setSelectedTag(s.key)
+                  }}
+                  onMouseLeave={() => {
+                    setSelectedTag(null)
+                  }}
                 >
                   <title>{s.key}</title>
                 </path>
@@ -439,6 +416,7 @@ const MonthlyLineChart = ({
   transparentOpacity,
   highlightOpacity,
   selectedTag,
+  setDateRange,
   setSelectedTag
 }) => {
   const keys = tags.map(({ tag }) => tag)
@@ -452,8 +430,8 @@ const MonthlyLineChart = ({
     return obj
   })
 
-  const margin = { top: 10, right: 50, bottom: 50, left: 50 }
-  const contentWidth = 1400
+  const margin = { top: 10, right: 60, bottom: 50, left: 60 }
+  const contentWidth = 1500 - margin.right - margin.left
   const contentHeight = 400 - margin.top - margin.bottom
   const tickLength = 10
 
@@ -469,6 +447,28 @@ const MonthlyLineChart = ({
     .nice()
   const colors = new Map(tags.map(({ tag, color }) => [tag, color]))
   const timeFormat = d3.timeFormat('%Y%m')
+
+  const ref = useRef()
+  useEffect(() => {
+    const brush = d3
+      .brushX()
+      .extent([
+        [0, 0],
+        [contentWidth, contentHeight]
+      ])
+      .on('end', () => {
+        if (d3.event.selection) {
+          const [x0, x1] = d3.event.selection
+          setDateRange({
+            start: new Date(xScale.invert(x0)),
+            end: new Date(xScale.invert(x1))
+          })
+        } else {
+          setDateRange(null)
+        }
+      })
+    d3.select(ref.current).call(brush)
+  }, [contentWidth, contentHeight, xScale, setDateRange])
 
   return (
     <SvgFigure
@@ -522,7 +522,7 @@ const MonthlyLineChart = ({
             )
           })}
         </g>
-        <g>
+        <g ref={ref}>
           {keys.map((key) => {
             const line = d3
               .line()
@@ -533,7 +533,6 @@ const MonthlyLineChart = ({
                 <path
                   className='pointer'
                   style={{
-                    transitionDelay: '2s',
                     transitionDuration: '1s',
                     transitionProperty: 'd'
                   }}
@@ -548,6 +547,12 @@ const MonthlyLineChart = ({
                       ? highlightOpacity
                       : transparentOpacity
                   }
+                  onMouseOver={() => {
+                    setSelectedTag(key)
+                  }}
+                  onMouseLeave={() => {
+                    setSelectedTag(null)
+                  }}
                 >
                   <title>{key}</title>
                 </path>

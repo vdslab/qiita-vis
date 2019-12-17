@@ -47,7 +47,7 @@ app.get('/total', (req, res) => {
     : new Date(2000, 0, 1)
   const endDate = req.query.endDate
     ? new Date(req.query.endDate)
-    : new Date(2200, 0, 1)
+    : new Date(2100, 0, 1)
   const query = `SELECT
   t.name AS tag,
   COUNT(*) AS count
@@ -77,7 +77,7 @@ app.get('/graph', (req, res) => {
     : new Date(2000, 0, 1)
   const endDate = req.query.endDate
     ? new Date(req.query.endDate)
-    : new Date(2200, 0, 1)
+    : new Date(2100, 0, 1)
   const limit = +req.query.limit || 100
   const query = `CREATE TEMPORARY FUNCTION
   pairs(tags ARRAY<STRUCT<versions ARRAY<String>,
@@ -167,6 +167,7 @@ FROM
   s.tags AS t
 WHERE
   t.name IN UNNEST(@tags)
+  AND created_at < TIMESTAMP "2019-06-30"
 GROUP BY
   tag,
   yearMonth
