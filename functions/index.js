@@ -167,7 +167,6 @@ FROM
   s.tags AS t
 WHERE
   t.name IN UNNEST(@tags)
-  AND created_at < TIMESTAMP "2019-06-30"
 GROUP BY
   tag,
   yearMonth
